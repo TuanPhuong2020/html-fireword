@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(pm:prd-parse)",
+      "Skill(pm:prd-parse:*)",
+      "Skill(pm:epic-decompose)",
+      "Skill(pm:epic-decompose:*)"
+    ]
+  }
+}
