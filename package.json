@@ -1,0 +1,42 @@
+{
+  "name": "html-fireword",
+  "version": "1.0.0",
+  "description": "Interactive HTML/JavaScript fireworks animation library for web celebration effects",
+  "type": "module",
+  "main": "dist/firework.js",
+  "module": "dist/firework.esm.js",
+  "types": "dist/firework.d.ts",
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "test": "jest",
+    "size": "gzip -c dist/firework.min.js | wc -c"
+  },
+  "keywords": [
+    "fireworks",
+    "animation",
+    "canvas",
+    "particles",
+    "celebration",
+    "effects"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "jest": "^29.7.0",
+    "rollup": "^4.9.6",
+    "typescript": "^5.3.3"
+  },
+  "author": "",
+  "repository": {
+    "type": "git",
+    "url": ""
+  }
+}
