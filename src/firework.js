@@ -173,8 +173,8 @@ export default class Firework {
       // Random angle: Math.random() * Math.PI * 2
       const angle = Math.random() * Math.PI * 2;
 
-      // Random speed: 5 + Math.random() * 5 (5-10 pixels/frame)
-      const speed = 5 + Math.random() * 5;
+      // Random speed with more variation: 3 + Math.random() * 8 (3-11 pixels/frame)
+      const speed = 3 + Math.random() * 8;
 
       // Calculate velocity
       const vx = Math.cos(angle) * speed;
@@ -192,15 +192,18 @@ export default class Firework {
       // Convert RGB array to color string
       const colorStr = this._rgbToString(rgb);
 
-      // Create particle object
+      // Create particle object with enhanced properties
       particles.push({
         x: x,
         y: y,
         vx: vx,
         vy: vy,
         color: colorStr,
+        rgb: rgb, // Store RGB for glow effect
         alpha: 1.0,
-        life: 1.0
+        life: 1.0,
+        size: 2 + Math.random() * 3, // Random size 2-5px
+        trail: [] // Trail for motion blur effect
       });
     }
 
@@ -213,8 +216,19 @@ export default class Firework {
     for (let i = 0; i < this.particles.length; i++) {
       const particle = this.particles[i];
 
+      // Store previous position for trail effect
+      if (particle.trail.length < 5) {
+        particle.trail.push({ x: particle.x, y: particle.y, alpha: particle.alpha });
+      } else {
+        particle.trail.shift();
+        particle.trail.push({ x: particle.x, y: particle.y, alpha: particle.alpha });
+      }
+
       // Apply gravity
       particle.vy += this.defaults.gravity;
+
+      // Add slight friction to x velocity for more realistic motion
+      particle.vx *= 0.99;
 
       // Update position
       particle.x += particle.vx;
@@ -333,28 +347,51 @@ export default class Firework {
     const width = this.canvas.width;
     const height = this.canvas.height;
 
-    // Clear canvas
-    this.ctx.clearRect(0, 0, width, height);
+    // Clear canvas with slight fade for trail effect
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+    this.ctx.fillRect(0, 0, width, height);
 
     // Save canvas state
     this.ctx.save();
 
     // Loop through all particles in particles array
     for (const particle of this.particles) {
-      // Begin path
+      // Draw trail first
+      if (particle.trail && particle.trail.length > 0) {
+        for (let i = 0; i < particle.trail.length; i++) {
+          const trail = particle.trail[i];
+          const trailAlpha = trail.alpha * (i / particle.trail.length) * 0.5;
+
+          this.ctx.beginPath();
+          this.ctx.fillStyle = particle.color;
+          this.ctx.globalAlpha = trailAlpha;
+          this.ctx.arc(trail.x, trail.y, particle.size * 0.5, 0, Math.PI * 2);
+          this.ctx.fill();
+        }
+      }
+
+      // Draw glow effect
+      this.ctx.save();
+      this.ctx.shadowBlur = 15;
+      this.ctx.shadowColor = particle.color;
+      this.ctx.globalAlpha = particle.alpha * 0.8;
+
+      // Draw main particle with glow
       this.ctx.beginPath();
-
-      // Set fill style with color
       this.ctx.fillStyle = particle.color;
-
-      // Set global alpha
-      this.ctx.globalAlpha = particle.alpha;
-
-      // Draw circle at particle position (radius 3px)
-      this.ctx.arc(particle.x, particle.y, 3, 0, Math.PI * 2);
-
-      // Fill the circle
+      this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
       this.ctx.fill();
+
+      this.ctx.restore();
+
+      // Draw bright core
+      this.ctx.save();
+      this.ctx.globalAlpha = particle.alpha;
+      this.ctx.fillStyle = `rgba(255, 255, 255, ${particle.alpha * 0.8})`;
+      this.ctx.beginPath();
+      this.ctx.arc(particle.x, particle.y, particle.size * 0.4, 0, Math.PI * 2);
+      this.ctx.fill();
+      this.ctx.restore();
     }
 
     // Restore canvas state
