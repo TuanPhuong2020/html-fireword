@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessibility Test - Firework</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #1a1a2e;
+            color: #fff;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .controls {
+            background: #16213e;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #0f3460;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #e94560;
+        }
+        .info {
+            background: #16213e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .info p {
+            margin: 5px 0;
+        }
+        .status {
+            font-weight: bold;
+            color: #4ecca3;
+        }
+        .section {
+            background: #16213e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Accessibility & Reduced Motion Test</h1>
+
+        <div class="section">
+            <h3>Test Scenarios:</h3>
+            <ul>
+                <li>Normal Mode - Full animation with particles</li>
+                <li>Reduced Motion - Static celebration effect</li>
+                <li>Disabled Animations - No visual feedback</li>
+                <li>ARIA Attributes - Canvas hidden from screen readers</li>
+            </ul>
+        </div>
+
+        <div class="controls">
+            <h3>Test Controls</h3>
+            <button id="btnNormal">Test Normal Mode</button>
+            <button id="btnReduced">Test Reduced Motion</button>
+            <button id="btnDisabled">Test Disabled Animations</button>
+            <button id="btnARIA">Check ARIA Attributes</button>
+            <button id="btnMulti">Test Multi-Firework (Normal)</button>
+            <button id="btnMultiReduced">Test Multi-Firework (Reduced)</button>
+        </div>
+
+        <div class="info">
+            <h3>Test Results</h3>
+            <p>Current Mode: <span id="mode" class="status">None</span></p>
+            <p>Canvas ARIA Hidden: <span id="ariaHidden" class="status">Not checked</span></p>
+            <p>Canvas Role: <span id="role" class="status">Not checked</span></p>
+            <p>Last Test: <span id="lastTest" class="status">None</span></p>
+        </div>
+    </div>
+
+    <script type="module">
+        // Loading directly from source for GitHub Pages demo
+        import Firework from '../src/firework.js';
+
+        let currentFirework = null;
+
+        function cleanup() {
+            if (currentFirework) {
+                currentFirework.stop();
+                currentFirework = null;
+            }
+        }
+
+        function testNormalMode() {
+            cleanup();
+            document.getElementById('mode').textContent = 'Normal';
+            document.getElementById('lastTest').textContent = 'Normal mode - launching firework';
+
+            currentFirework = new Firework({
+                onLaunch: (x, y) => {
+                    console.log(`Normal mode: Launched at (${x}, ${y})`);
+                },
+                onComplete: () => {
+                    console.log('Normal mode: Animation completed');
+                }
+            });
+
+            const x = window.innerWidth / 2;
+            const y = window.innerHeight / 2;
+            currentFirework.launch(x, y);
+
+            console.log('✓ Normal mode test completed - should see animated particles');
+        }
+
+        function testReducedMotion() {
+            cleanup();
+            document.getElementById('mode').textContent = 'Reduced Motion';
+            document.getElementById('lastTest').textContent = 'Reduced motion - static celebration';
+
+            currentFirework = new Firework({
+                reducedMotion: true,
+                onLaunch: (x, y) => {
+                    console.log(`Reduced motion: Launched at (${x}, ${y})`);
+                },
+                onComplete: () => {
+                    console.log('Reduced motion: Static celebration completed');
+                }
+            });
+
+            const x = window.innerWidth / 2;
+            const y = window.innerHeight / 2;
+            currentFirework.launch(x, y);
+
+            console.log('✓ Reduced motion test completed - should see static circle that fades');
+        }
+
+        function testDisabledAnimations() {
+            cleanup();
+            document.getElementById('mode').textContent = 'Disabled';
+            document.getElementById('lastTest').textContent = 'Animations disabled - no visual feedback';
+
+            currentFirework = new Firework({
+                disableAnimations: true,
+                onLaunch: (x, y) => {
+                    console.log(`Disabled mode: Launch called at (${x}, ${y}) but ignored`);
+                },
+                onComplete: () => {
+                    console.log('Disabled mode: Complete called');
+                }
+            });
+
+            const x = window.innerWidth / 2;
+            const y = window.innerHeight / 2;
+            currentFirework.launch(x, y);
+
+            console.log('✓ Disabled animations test completed - should see nothing');
+        }
+
+        function testARIAAttributes() {
+            cleanup();
+            document.getElementById('lastTest').textContent = 'Checking ARIA attributes';
+
+            currentFirework = new Firework();
+
+            const canvas = currentFirework.canvas;
+            const ariaHidden = canvas.getAttribute('aria-hidden');
+            const role = canvas.getAttribute('role');
+
+            document.getElementById('ariaHidden').textContent = ariaHidden || 'Not set';
+            document.getElementById('role').textContent = role || 'Not set';
+
+            console.log('✓ ARIA Attributes Test:');
+            console.log(`  aria-hidden: ${ariaHidden}`);
+            console.log(`  role: ${role}`);
+
+            if (ariaHidden === 'true' && role === 'presentation') {
+                console.log('  ✓ ARIA attributes correctly set!');
+                document.getElementById('ariaHidden').style.color = '#4ecca3';
+                document.getElementById('role').style.color = '#4ecca3';
+            } else {
+                console.log('  ✗ ARIA attributes missing or incorrect');
+                document.getElementById('ariaHidden').style.color = '#e94560';
+                document.getElementById('role').style.color = '#e94560';
+            }
+        }
+
+        function testMultiFirework() {
+            cleanup();
+            document.getElementById('mode').textContent = 'Normal (Multi)';
+            document.getElementById('lastTest').textContent = 'Multi-firework test - normal mode';
+
+            let launchCount = 0;
+            currentFirework = new Firework({
+                onLaunch: (x, y) => {
+                    launchCount++;
+                    console.log(`Launch #${launchCount} at (${x}, ${y})`);
+                },
+                onComplete: () => {
+                    console.log(`All ${launchCount} fireworks completed`);
+                }
+            });
+
+            // Launch 3 fireworks in quick succession
+            const positions = [
+                [window.innerWidth * 0.3, window.innerHeight * 0.4],
+                [window.innerWidth * 0.5, window.innerHeight * 0.3],
+                [window.innerWidth * 0.7, window.innerHeight * 0.4]
+            ];
+
+            positions.forEach((pos, i) => {
+                setTimeout(() => {
+                    currentFirework.launch(pos[0], pos[1]);
+                }, i * 300);
+            });
+
+            console.log('✓ Multi-firework normal mode test started - 3 fireworks');
+        }
+
+        function testMultiReducedMotion() {
+            cleanup();
+            document.getElementById('mode').textContent = 'Reduced Motion (Multi)';
+            document.getElementById('lastTest').textContent = 'Multi-firework test - reduced motion';
+
+            let launchCount = 0;
+            currentFirework = new Firework({
+                reducedMotion: true,
+                onLaunch: (x, y) => {
+                    launchCount++;
+                    console.log(`Reduced motion launch #${launchCount} at (${x}, ${y})`);
+                },
+                onComplete: () => {
+                    console.log(`Reduced motion celebration #${launchCount} completed`);
+                }
+            });
+
+            // Launch 3 static celebrations in quick succession
+            const positions = [
+                [window.innerWidth * 0.3, window.innerHeight * 0.4],
+                [window.innerWidth * 0.5, window.innerHeight * 0.3],
+                [window.innerWidth * 0.7, window.innerHeight * 0.4]
+            ];
+
+            positions.forEach((pos, i) => {
+                setTimeout(() => {
+                    currentFirework.launch(pos[0], pos[1]);
+                }, i * 400);
+            });
+
+            console.log('✓ Multi-firework reduced motion test started - 3 static celebrations');
+        }
+
+        // Attach event listeners
+        document.getElementById('btnNormal').addEventListener('click', testNormalMode);
+        document.getElementById('btnReduced').addEventListener('click', testReducedMotion);
+        document.getElementById('btnDisabled').addEventListener('click', testDisabledAnimations);
+        document.getElementById('btnARIA').addEventListener('click', testARIAAttributes);
+        document.getElementById('btnMulti').addEventListener('click', testMultiFirework);
+        document.getElementById('btnMultiReduced').addEventListener('click', testMultiReducedMotion);
+
+        // Auto-run ARIA test on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                testARIAAttributes();
+            }, 500);
+        });
+
+        console.log('Accessibility test page loaded');
+        console.log('Use the buttons to test different accessibility modes');
+    </script>
+</body>
+</html>

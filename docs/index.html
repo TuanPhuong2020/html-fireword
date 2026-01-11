@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firework Test - html-fireword</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #1a1a2e;
+            color: #fff;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .controls {
+            background: #16213e;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #0f3460;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #e94560;
+        }
+        .info {
+            background: #16213e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .info p {
+            margin: 5px 0;
+        }
+        #fps {
+            font-weight: bold;
+            color: #4ecca3;
+        }
+        #particleCount {
+            font-weight: bold;
+            color: #4ecca3;
+        }
+        .instructions {
+            background: #16213e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎆 Firework Engine Test 🎆</h1>
+        
+        <div class="instructions">
+            <h3>Instructions:</h3>
+            <ul>
+                <li>Click anywhere on the page to launch fireworks</li>
+                <li>Use buttons below for automated tests</li>
+                <li>Monitor FPS and particle count</li>
+            </ul>
+        </div>
+
+        <div class="controls">
+            <h3>Test Controls</h3>
+            <button id="btnSingle">Launch Single Firework</button>
+            <button id="btnMultiple">Launch 5 Fireworks</button>
+            <button id="btnStress">Stress Test (10 Fireworks)</button>
+            <button id="btnRandom">Random Launch (10s)</button>
+            <button id="btnStop">Stop All</button>
+        </div>
+
+        <div class="info">
+            <h3>Performance Monitor</h3>
+            <p>FPS: <span id="fps">60</span></p>
+            <p>Active Particles: <span id="particleCount">0</span></p>
+            <p>Total Fireworks Launched: <span id="totalLaunched">0</span></p>
+        </div>
+    </div>
+
+    <script type="module">
+        // Loading directly from source for GitHub Pages demo
+        import Firework from '../src/firework.js';
+
+        // Create firework instance
+        const firework = new Firework();
+
+        let totalLaunched = 0;
+        let randomInterval = null;
+
+        // Click to launch
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.controls') && !e.target.closest('.info')) {
+                firework.launch(e.clientX, e.clientY);
+                totalLaunched++;
+                updateStats();
+            }
+        });
+
+        // Attach event listeners to buttons
+        document.getElementById('btnSingle').addEventListener('click', () => {
+            const x = window.innerWidth / 2;
+            const y = window.innerHeight / 2;
+            firework.launch(x, y);
+            totalLaunched++;
+            updateStats();
+        });
+
+        document.getElementById('btnMultiple').addEventListener('click', () => {
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const x = Math.random() * window.innerWidth;
+                    const y = Math.random() * window.innerHeight;
+                    firework.launch(x, y);
+                    totalLaunched++;
+                    updateStats();
+                }, i * 200);
+            }
+        });
+
+        document.getElementById('btnStress').addEventListener('click', () => {
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    const x = Math.random() * window.innerWidth;
+                    const y = Math.random() * window.innerHeight;
+                    firework.launch(x, y);
+                    totalLaunched++;
+                    updateStats();
+                }, i * 100);
+            }
+        });
+
+        document.getElementById('btnRandom').addEventListener('click', () => {
+            if (randomInterval) {
+                clearInterval(randomInterval);
+            }
+            let count = 0;
+            randomInterval = setInterval(() => {
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight;
+                firework.launch(x, y);
+                totalLaunched++;
+                updateStats();
+                count++;
+                if (count >= 20) {
+                    clearInterval(randomInterval);
+                    randomInterval = null;
+                }
+            }, 500);
+        });
+
+        document.getElementById('btnStop').addEventListener('click', () => {
+            if (randomInterval) {
+                clearInterval(randomInterval);
+                randomInterval = null;
+            }
+            firework.stop();
+            updateStats();
+        });
+
+        // FPS monitoring
+        let lastTime = performance.now();
+        let fps = 60;
+
+        function measureFPS() {
+            const now = performance.now();
+            const delta = now - lastTime;
+            fps = Math.round(1000 / delta);
+            lastTime = now;
+
+            document.getElementById('fps').textContent = fps;
+            document.getElementById('particleCount').textContent = firework.particles.length;
+
+            requestAnimationFrame(measureFPS);
+        }
+
+        function updateStats() {
+            document.getElementById('totalLaunched').textContent = totalLaunched;
+        }
+
+        // Start FPS monitoring
+        measureFPS();
+
+        console.log('Firework engine loaded successfully!');
+        console.log('Click anywhere to launch fireworks');
+    </script>
+</body>
+</html>
