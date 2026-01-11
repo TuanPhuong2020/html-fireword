@@ -56,8 +56,94 @@ export default class Firework {
     return canvas;
   }
 
+  _createParticles(x, y, config = {}) {
+    // Get particle count from config or use default
+    const particleCount = config.particleCount || this.defaults.particleCount;
+
+    // Create array of particle objects
+    const particles = [];
+
+    // For each particle
+    for (let i = 0; i < particleCount; i++) {
+      // Random angle: Math.random() * Math.PI * 2
+      const angle = Math.random() * Math.PI * 2;
+
+      // Random speed: 5 + Math.random() * 5 (5-10 pixels/frame)
+      const speed = 5 + Math.random() * 5;
+
+      // Calculate velocity
+      const vx = Math.cos(angle) * speed;
+      const vy = Math.sin(angle) * speed;
+
+      // Create particle object
+      particles.push({
+        x: x,
+        y: y,
+        vx: vx,
+        vy: vy,
+        color: '#ffffff',
+        alpha: 1.0,
+        life: 1.0
+      });
+    }
+
+    // Return array of particles
+    return particles;
+  }
+
+  _updateParticles() {
+    // Loop through all particles
+    for (let i = 0; i < this.particles.length; i++) {
+      const particle = this.particles[i];
+
+      // Apply gravity
+      particle.vy += this.defaults.gravity;
+
+      // Update position
+      particle.x += particle.vx;
+      particle.y += particle.vy;
+
+      // Apply alpha decay
+      particle.alpha -= this.defaults.fadeSpeed;
+
+      // Decrease life
+      particle.life -= 0.01;
+    }
+
+    // Filter out dead particles
+    this.particles = this.particles.filter(p => p.alpha > 0);
+  }
+
+  _animate() {
+    // Update particles
+    this._updateParticles();
+
+    // Render particles
+    this._render();
+
+    // Continue loop if particles exist
+    if (this.particles.length > 0) {
+      this.animationId = requestAnimationFrame(this._animate.bind(this));
+    } else {
+      // Otherwise stop
+      this.animationId = null;
+    }
+  }
+
   launch(x, y, overrides = {}) {
-    // TODO: Implementation in next task
+    // Merge overrides with defaults for config
+    const config = { ...this.defaults, ...overrides };
+
+    // Create new particles
+    const newParticles = this._createParticles(x, y, config);
+
+    // Add to particles array
+    this.particles.push(...newParticles);
+
+    // Start animation if not running
+    if (!this.animationId) {
+      this._animate();
+    }
   }
 
   _render() {
