@@ -37,6 +37,13 @@ export default class Firework {
     // Initialize completion flag
     this._completeFired = false;
 
+    // Accessibility: Handle motion preferences
+    this.reducedMotion = options.reducedMotion !== undefined
+      ? options.reducedMotion
+      : window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    this.disableAnimations = options.disableAnimations || false;
+
     // Get or create canvas
     if (options.canvas) {
       this.canvas = options.canvas;
@@ -136,6 +143,10 @@ export default class Firework {
     // Set canvas dimensions
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+
+    // Accessibility: Add ARIA attributes to hide decorative canvas from screen readers
+    canvas.setAttribute('aria-hidden', 'true');
+    canvas.setAttribute('role', 'presentation');
 
     // Append to document body
     document.body.appendChild(canvas);
@@ -243,6 +254,16 @@ export default class Firework {
   }
 
   launch(x, y, overrides = {}) {
+    // Handle disabled animations
+    if (this.disableAnimations) return;
+
+    // Handle reduced motion preference
+    if (this.reducedMotion) {
+      this._showStaticCelebration(x, y);
+      if (this.onLaunch) this.onLaunch(x, y);
+      return;
+    }
+
     // Parse colors if provided in overrides
     const colors = overrides.colors ? this._parseColors(overrides.colors) : this.colorPalette;
 
@@ -267,6 +288,44 @@ export default class Firework {
     if (!this.animationId) {
       this._animate();
     }
+  }
+
+  _showStaticCelebration(x, y) {
+    // Draw a simple static starburst for reduced motion users
+    const ctx = this.ctx;
+    const width = this.canvas.width;
+    const height = this.canvas.height;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, width, height);
+
+    // Save canvas state
+    ctx.save();
+
+    // Create radial gradient for visual effect
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, 50);
+    const rgb = this.colorPalette[0];
+    gradient.addColorStop(0, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.8)`);
+    gradient.addColorStop(1, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0)`);
+
+    // Draw circle
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(x, y, 50, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Restore canvas state
+    ctx.restore();
+
+    // Fade out after 300ms
+    setTimeout(() => {
+      ctx.clearRect(0, 0, width, height);
+      // Fire onComplete callback
+      if (this.onComplete && !this._completeFired) {
+        this._completeFired = true;
+        this.onComplete();
+      }
+    }, 300);
   }
 
   _render() {
