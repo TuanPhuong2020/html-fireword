@@ -2,6 +2,13 @@
  * Firework - Interactive fireworks animation library
  */
 export default class Firework {
+  static PALETTES = {
+    rainbow: [[255,0,0], [255,127,0], [255,255,0], [0,255,0], [0,0,255], [75,0,130], [148,0,211]],
+    fire: [[255,69,0], [255,140,0], [255,215,0], [255,255,0]],
+    ocean: [[0,119,190], [0,180,216], [144,224,239]],
+    monochrome: [[255,255,255]]
+  };
+
   constructor(options = {}) {
     // Initialize particles array
     this.particles = [];
@@ -19,6 +26,17 @@ export default class Firework {
     // Merge user options with defaults
     this.options = { ...this.defaults, ...options };
 
+    // Parse and store color options
+    this.colorPalette = this._parseColors(options.colors || 'rainbow');
+    this.colorMode = options.colorMode || 'multi';
+
+    // Store event callbacks
+    this.onLaunch = options.onLaunch || null;
+    this.onComplete = options.onComplete || null;
+
+    // Initialize completion flag
+    this._completeFired = false;
+
     // Get or create canvas
     if (options.canvas) {
       this.canvas = options.canvas;
@@ -30,6 +48,76 @@ export default class Firework {
 
     // Get canvas 2D context
     this.ctx = this.canvas.getContext('2d');
+  }
+
+  _parseColors(colors) {
+    try {
+      // If colors is a string
+      if (typeof colors === 'string') {
+        // Check if it's a hex color (starts with #)
+        if (colors.startsWith('#')) {
+          // Parse hex to RGB
+          const r = parseInt(colors.slice(1, 3), 16);
+          const g = parseInt(colors.slice(3, 5), 16);
+          const b = parseInt(colors.slice(5, 7), 16);
+
+          // Validate RGB values
+          if (r >= 0 && r <= 255 && g >= 0 && g <= 255 && b >= 0 && b <= 255) {
+            return [[r, g, b]];
+          }
+        }
+
+        // Check if it's a palette name
+        if (Firework.PALETTES[colors]) {
+          return Firework.PALETTES[colors];
+        }
+
+        // Otherwise return default rainbow palette
+        return Firework.PALETTES.rainbow;
+      }
+
+      // If colors is an array
+      if (Array.isArray(colors)) {
+        // If first element is a number (RGB array)
+        if (typeof colors[0] === 'number') {
+          // Validate RGB values are in 0-255 range
+          if (colors.length === 3 &&
+              colors[0] >= 0 && colors[0] <= 255 &&
+              colors[1] >= 0 && colors[1] <= 255 &&
+              colors[2] >= 0 && colors[2] <= 255) {
+            return [colors];
+          }
+        }
+
+        // If array of arrays
+        if (Array.isArray(colors[0])) {
+          // Validate each RGB array
+          const validColors = colors.filter(rgb =>
+            Array.isArray(rgb) &&
+            rgb.length === 3 &&
+            rgb[0] >= 0 && rgb[0] <= 255 &&
+            rgb[1] >= 0 && rgb[1] <= 255 &&
+            rgb[2] >= 0 && rgb[2] <= 255
+          );
+
+          // Return validated colors or fallback to rainbow
+          if (validColors.length > 0) {
+            return validColors;
+          }
+        }
+      }
+
+      // Fallback to rainbow palette
+      return Firework.PALETTES.rainbow;
+    } catch (error) {
+      // On any error, return rainbow palette
+      return Firework.PALETTES.rainbow;
+    }
+  }
+
+  _rgbToString(rgb) {
+    // Convert [r,g,b] array to "rgb(r,g,b)" string
+    return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
   }
 
   _createCanvas() {
@@ -60,6 +148,12 @@ export default class Firework {
     // Get particle count from config or use default
     const particleCount = config.particleCount || this.defaults.particleCount;
 
+    // Get color palette from config or use default
+    const palette = config.colorPalette || this.colorPalette;
+
+    // Get color mode from config or use default
+    const mode = config.colorMode || this.colorMode;
+
     // Create array of particle objects
     const particles = [];
 
@@ -75,13 +169,25 @@ export default class Firework {
       const vx = Math.cos(angle) * speed;
       const vy = Math.sin(angle) * speed;
 
+      // Determine particle color based on mode
+      let rgb;
+      if (mode === 'single') {
+        rgb = palette[0];
+      } else {
+        // mode === 'multi'
+        rgb = palette[Math.floor(Math.random() * palette.length)];
+      }
+
+      // Convert RGB array to color string
+      const colorStr = this._rgbToString(rgb);
+
       // Create particle object
       particles.push({
         x: x,
         y: y,
         vx: vx,
         vy: vy,
-        color: '#ffffff',
+        color: colorStr,
         alpha: 1.0,
         life: 1.0
       });
@@ -127,12 +233,29 @@ export default class Firework {
     } else {
       // Otherwise stop
       this.animationId = null;
+
+      // Fire onComplete callback once
+      if (this.onComplete && !this._completeFired) {
+        this._completeFired = true;
+        this.onComplete();
+      }
     }
   }
 
   launch(x, y, overrides = {}) {
+    // Parse colors if provided in overrides
+    const colors = overrides.colors ? this._parseColors(overrides.colors) : this.colorPalette;
+
     // Merge overrides with defaults for config
-    const config = { ...this.defaults, ...overrides };
+    const config = { ...this.defaults, ...overrides, colorPalette: colors };
+
+    // Fire onLaunch callback
+    if (this.onLaunch) {
+      this.onLaunch(x, y);
+    }
+
+    // Reset completion flag for new launch
+    this._completeFired = false;
 
     // Create new particles
     const newParticles = this._createParticles(x, y, config);
