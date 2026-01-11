@@ -60,6 +60,39 @@ export default class Firework {
     // TODO: Implementation in next task
   }
 
+  _render() {
+    // Get canvas dimensions
+    const width = this.canvas.width;
+    const height = this.canvas.height;
+
+    // Clear canvas
+    this.ctx.clearRect(0, 0, width, height);
+
+    // Save canvas state
+    this.ctx.save();
+
+    // Loop through all particles in particles array
+    for (const particle of this.particles) {
+      // Begin path
+      this.ctx.beginPath();
+
+      // Set fill style with color
+      this.ctx.fillStyle = particle.color;
+
+      // Set global alpha
+      this.ctx.globalAlpha = particle.alpha;
+
+      // Draw circle at particle position (radius 3px)
+      this.ctx.arc(particle.x, particle.y, 3, 0, Math.PI * 2);
+
+      // Fill the circle
+      this.ctx.fill();
+    }
+
+    // Restore canvas state
+    this.ctx.restore();
+  }
+
   stop() {
     // Cancel animation frame if running
     if (this.animationId) {
