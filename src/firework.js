@@ -3,7 +3,57 @@
  */
 export default class Firework {
   constructor(options = {}) {
-    // TODO: Implementation in next task
+    // Initialize particles array
+    this.particles = [];
+
+    // Initialize animation ID
+    this.animationId = null;
+
+    // Set default configuration
+    this.defaults = {
+      particleCount: 50,
+      gravity: 0.1,
+      fadeSpeed: 0.02
+    };
+
+    // Merge user options with defaults
+    this.options = { ...this.defaults, ...options };
+
+    // Get or create canvas
+    if (options.canvas) {
+      this.canvas = options.canvas;
+      this.autoCreated = false;
+    } else {
+      this.canvas = this._createCanvas();
+      this.autoCreated = true;
+    }
+
+    // Get canvas 2D context
+    this.ctx = this.canvas.getContext('2d');
+  }
+
+  _createCanvas() {
+    // Create canvas element
+    const canvas = document.createElement('canvas');
+
+    // Style as fullscreen overlay
+    canvas.style.position = 'fixed';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.width = '100vw';
+    canvas.style.height = '100vh';
+    canvas.style.pointerEvents = 'none';
+    canvas.style.zIndex = '9999';
+
+    // Set canvas dimensions
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Append to document body
+    document.body.appendChild(canvas);
+
+    // Return canvas element
+    return canvas;
   }
 
   launch(x, y, overrides = {}) {
@@ -11,6 +61,20 @@ export default class Firework {
   }
 
   stop() {
-    // TODO: Implementation in next task
+    // Cancel animation frame if running
+    if (this.animationId) {
+      cancelAnimationFrame(this.animationId);
+    }
+
+    // Clear particles array
+    this.particles = [];
+
+    // Remove canvas from DOM if auto-created
+    if (this.autoCreated && this.canvas && this.canvas.parentNode) {
+      this.canvas.parentNode.removeChild(this.canvas);
+    }
+
+    // Set animationId to null
+    this.animationId = null;
   }
 }
