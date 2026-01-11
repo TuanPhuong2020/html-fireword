@@ -77,12 +77,12 @@
 
         <div class="controls">
             <h3>Test Controls</h3>
-            <button onclick="testNormalMode()">Test Normal Mode</button>
-            <button onclick="testReducedMotion()">Test Reduced Motion</button>
-            <button onclick="testDisabledAnimations()">Test Disabled Animations</button>
-            <button onclick="testARIAAttributes()">Check ARIA Attributes</button>
-            <button onclick="testMultiFirework()">Test Multi-Firework (Normal)</button>
-            <button onclick="testMultiReducedMotion()">Test Multi-Firework (Reduced)</button>
+            <button id="btnNormal">Test Normal Mode</button>
+            <button id="btnReduced">Test Reduced Motion</button>
+            <button id="btnDisabled">Test Disabled Animations</button>
+            <button id="btnARIA">Check ARIA Attributes</button>
+            <button id="btnMulti">Test Multi-Firework (Normal)</button>
+            <button id="btnMultiReduced">Test Multi-Firework (Reduced)</button>
         </div>
 
         <div class="info">
@@ -107,7 +107,7 @@
             }
         }
 
-        window.testNormalMode = () => {
+        function testNormalMode() {
             cleanup();
             document.getElementById('mode').textContent = 'Normal';
             document.getElementById('lastTest').textContent = 'Normal mode - launching firework';
@@ -126,9 +126,9 @@
             currentFirework.launch(x, y);
 
             console.log('✓ Normal mode test completed - should see animated particles');
-        };
+        }
 
-        window.testReducedMotion = () => {
+        function testReducedMotion() {
             cleanup();
             document.getElementById('mode').textContent = 'Reduced Motion';
             document.getElementById('lastTest').textContent = 'Reduced motion - static celebration';
@@ -148,9 +148,9 @@
             currentFirework.launch(x, y);
 
             console.log('✓ Reduced motion test completed - should see static circle that fades');
-        };
+        }
 
-        window.testDisabledAnimations = () => {
+        function testDisabledAnimations() {
             cleanup();
             document.getElementById('mode').textContent = 'Disabled';
             document.getElementById('lastTest').textContent = 'Animations disabled - no visual feedback';
@@ -170,9 +170,9 @@
             currentFirework.launch(x, y);
 
             console.log('✓ Disabled animations test completed - should see nothing');
-        };
+        }
 
-        window.testARIAAttributes = () => {
+        function testARIAAttributes() {
             cleanup();
             document.getElementById('lastTest').textContent = 'Checking ARIA attributes';
 
@@ -198,9 +198,9 @@
                 document.getElementById('ariaHidden').style.color = '#e94560';
                 document.getElementById('role').style.color = '#e94560';
             }
-        };
+        }
 
-        window.testMultiFirework = () => {
+        function testMultiFirework() {
             cleanup();
             document.getElementById('mode').textContent = 'Normal (Multi)';
             document.getElementById('lastTest').textContent = 'Multi-firework test - normal mode';
@@ -230,9 +230,9 @@
             });
 
             console.log('✓ Multi-firework normal mode test started - 3 fireworks');
-        };
+        }
 
-        window.testMultiReducedMotion = () => {
+        function testMultiReducedMotion() {
             cleanup();
             document.getElementById('mode').textContent = 'Reduced Motion (Multi)';
             document.getElementById('lastTest').textContent = 'Multi-firework test - reduced motion';
@@ -263,7 +263,15 @@
             });
 
             console.log('✓ Multi-firework reduced motion test started - 3 static celebrations');
-        };
+        }
+
+        // Attach event listeners
+        document.getElementById('btnNormal').addEventListener('click', testNormalMode);
+        document.getElementById('btnReduced').addEventListener('click', testReducedMotion);
+        document.getElementById('btnDisabled').addEventListener('click', testDisabledAnimations);
+        document.getElementById('btnARIA').addEventListener('click', testARIAAttributes);
+        document.getElementById('btnMulti').addEventListener('click', testMultiFirework);
+        document.getElementById('btnMultiReduced').addEventListener('click', testMultiReducedMotion);
 
         // Auto-run ARIA test on load
         window.addEventListener('load', () => {

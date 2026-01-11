@@ -80,11 +80,11 @@
 
         <div class="controls">
             <h3>Test Controls</h3>
-            <button onclick="launchSingle()">Launch Single Firework</button>
-            <button onclick="launchMultiple()">Launch 5 Fireworks</button>
-            <button onclick="launchStress()">Stress Test (10 Fireworks)</button>
-            <button onclick="launchRandom()">Random Launch (10s)</button>
-            <button onclick="stopFireworks()">Stop All</button>
+            <button id="btnSingle">Launch Single Firework</button>
+            <button id="btnMultiple">Launch 5 Fireworks</button>
+            <button id="btnStress">Stress Test (10 Fireworks)</button>
+            <button id="btnRandom">Random Launch (10s)</button>
+            <button id="btnStop">Stop All</button>
         </div>
 
         <div class="info">
@@ -101,29 +101,29 @@
 
         // Create firework instance
         const firework = new Firework();
-        
+
         let totalLaunched = 0;
         let randomInterval = null;
 
         // Click to launch
         document.addEventListener('click', (e) => {
-            if (e.target.tagName !== 'BUTTON') {
+            if (!e.target.closest('.controls') && !e.target.closest('.info')) {
                 firework.launch(e.clientX, e.clientY);
                 totalLaunched++;
                 updateStats();
             }
         });
 
-        // Test functions
-        window.launchSingle = () => {
+        // Attach event listeners to buttons
+        document.getElementById('btnSingle').addEventListener('click', () => {
             const x = window.innerWidth / 2;
             const y = window.innerHeight / 2;
             firework.launch(x, y);
             totalLaunched++;
             updateStats();
-        };
+        });
 
-        window.launchMultiple = () => {
+        document.getElementById('btnMultiple').addEventListener('click', () => {
             for (let i = 0; i < 5; i++) {
                 setTimeout(() => {
                     const x = Math.random() * window.innerWidth;
@@ -133,9 +133,9 @@
                     updateStats();
                 }, i * 200);
             }
-        };
+        });
 
-        window.launchStress = () => {
+        document.getElementById('btnStress').addEventListener('click', () => {
             for (let i = 0; i < 10; i++) {
                 setTimeout(() => {
                     const x = Math.random() * window.innerWidth;
@@ -145,9 +145,9 @@
                     updateStats();
                 }, i * 100);
             }
-        };
+        });
 
-        window.launchRandom = () => {
+        document.getElementById('btnRandom').addEventListener('click', () => {
             if (randomInterval) {
                 clearInterval(randomInterval);
             }
@@ -164,16 +164,16 @@
                     randomInterval = null;
                 }
             }, 500);
-        };
+        });
 
-        window.stopFireworks = () => {
+        document.getElementById('btnStop').addEventListener('click', () => {
             if (randomInterval) {
                 clearInterval(randomInterval);
                 randomInterval = null;
             }
             firework.stop();
             updateStats();
-        };
+        });
 
         // FPS monitoring
         let lastTime = performance.now();
@@ -184,10 +184,10 @@
             const delta = now - lastTime;
             fps = Math.round(1000 / delta);
             lastTime = now;
-            
+
             document.getElementById('fps').textContent = fps;
             document.getElementById('particleCount').textContent = firework.particles.length;
-            
+
             requestAnimationFrame(measureFPS);
         }
 
